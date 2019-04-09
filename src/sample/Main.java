@@ -3,16 +3,15 @@ package sample;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import sample.Images.Marcador;
-import sample.Sprites.Item;
+import sample.Sprites.Bomba;
+import sample.Sprites.Fondo;
+import sample.Sprites.Fruta;
 import sample.Sprites.Snake;
 
 import java.util.Random;
@@ -21,17 +20,18 @@ public class Main extends Application {
 
     static Scene mainScene;
     static GraphicsContext graphicsContext;
-    static int alto = 600;
-    static int ancho = 600;
-    int puntuacion =0;
+    static int alto = 300;
+    static int ancho = 300;
+
     String direccion ="LEFT";
     Random random= new Random();
-    // activo y bomb 0 = true 1 = false
-    int activo=0;
-    int bomb = 2;
+    boolean frut = true, bomb= false;
+    int nivel=5;
+
     Snake head = new Snake();
-    Item fruta = new Item("fruta");
-    Item bomba = new Item("bomba");
+    Fruta fruta = new Fruta("fruta");
+    Bomba bomba = new Bomba("bomba");
+    Fondo fondo = new Fondo();
     Marcador marcador= new Marcador();
 
     @Override
@@ -45,6 +45,9 @@ public class Main extends Application {
         Canvas canvas = new Canvas(alto,ancho);
         root.getChildren().add(canvas);
 
+        fondo.setImage();
+        fondo.setPosition(0,0);
+
         head.setImage("sample\\Images\\gatilen.png");
         head.setVelocity(1);
         head.setPosition((alto/2),(ancho/2));
@@ -53,10 +56,13 @@ public class Main extends Application {
 
 
         graphicsContext= canvas.getGraphicsContext2D();
+
+        fondo.render(graphicsContext);
         head.render(graphicsContext);
 
         fruta.setImage("sample\\Images\\fruta.png");
         bomba.setImage("sample\\Images\\bomba.png");
+
 
         fruta.setPosition(random.nextInt(ancho),random.nextInt(alto));
         fruta.render(graphicsContext);
@@ -64,30 +70,31 @@ public class Main extends Application {
 
         new AnimationTimer(){
             long lastUpdate = 0;
+//            long bombaRender =0;
+//            long bombaClear = 0;
+//            long nowBombarender=0;
+//            long nowBombaClear =0;
             @Override
             public void handle(long now) {
+//                nowBombaClear=now;
+//                bombaClear=now;
                 if (now - lastUpdate >= 10_000_000) {
-                    // activo y bomb 0 = true 1 = false
-                    if (activo==1) {
-                        pintarItem();
-//                        bomb = random.nextInt(2);
-//                        System.out.println("bomba=" + bomb);
-//                        if (bomb==1) {
-//                            bomba.setPosition(random.nextInt((int) (ancho - bomba.getWidth())), random.nextInt((int) (alto - bomba.getHeight())));
-//                            bomba.render(graphicsContext);
-//                        } else {
-//                            fruta.setPosition(random.nextInt((int) (ancho - fruta.getWidth())), random.nextInt((int) (alto - fruta.getHeight())));
-//                            fruta.render(graphicsContext);
-//                        }
-//                        activo = 0;
-//                    try {
-//                        System.out.println("sleep");
-//                        Thread.sleep(10);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-                    }
 
+                    if (!frut) {
+                        pintarFruta();
+                    }
+//                    if (!bomb && nowBombarender - bombaRender >= 60_000_000){
+//                        pintarbomba();
+//                        bombaRender = now;
+//                    }
+//                    if (bomb && nowBombaClear - bombaClear >=50_000_000){
+//                        bomba.clear(graphicsContext);
+//                        bombaClear = now;
+//                        bomb=false;
+//
+//                    }
+                    fondo.clear(graphicsContext);
+                    fondo.render(graphicsContext);
                     head.clear(graphicsContext);
                     head.update(direccion);
                     if (head.getPositionX() < 0 || (head.getPositionX() + head.getWidth()) > ancho || head.getPositionY() < 0 || (head.getPositionY() + head.getHeight()) > alto - 10) {
@@ -95,59 +102,66 @@ public class Main extends Application {
                         System.exit(0);
                     }
                     head.render(graphicsContext);
-                    comprobarItem(head);
-//                    if (fruta.intersects(head)) {
-//                        activo = 1;
-//                        fruta.clear(graphicsContext);
-//                        marcador.suma();
-//                        System.out.println("Has comido una fruta "+activo);
-//                        System.out.println(marcador.getPuntuacion());
-//
-//
-//                    } else if (bomba.intersects(head)) {
-//                        activo = 1;
-//                        bomba.clear(graphicsContext);
-//                        marcador.resta();
-//                        System.out.println("Has comido una bomba "+activo);
-//                        System.out.println(marcador.getPuntuacion());
-//
-//                    }
+                    comprobarFruta(head);
+                    comprobarBomba(head);
+                    renderitem();
+
                     lastUpdate = now;
+
+                    if (marcador.getPuntuacion() == nivel){
+                        head.setVelocity(head.getVelocity()+0.25);
+                        System.out.println("velocidad aumentada");
+                        nivel+=5;
+                    }
                 }
             }
         }.start();
         stage.show();
     }
-    public void pintarItem(){
-        bomb = random.nextInt(2);
-        System.out.println("bomba=" + bomb);
-        if (bomb==1) {
-            bomba.setPosition( random.nextInt( (int) ( ancho - bomba.getWidth() ) ), random.nextInt( (int) ( alto - bomba.getHeight() ) ) );
-            bomba.render(graphicsContext);
-        } else {
+
+
+
+    private void pintarbomba() {
+        bomba.setPosition(random.nextInt( (int) ( ancho - bomba.getWidth() ) ), random.nextInt( (int) ( alto - bomba.getHeight() ) ) );
+        bomba.render(graphicsContext);
+        bomb=true;
+    }
+
+    public void pintarFruta(){
             fruta.setPosition(random.nextInt( (int) ( ancho - fruta.getWidth() ) ), random.nextInt( (int) ( alto - fruta.getHeight() ) ) );
             fruta.render(graphicsContext);
-        }
-        activo = 0;
+            frut=true;
+
     }
-    public void comprobarItem(Snake head){
-        if (fruta.intersects(head)) {
-            activo = 1;
+    public void comprobarFruta(Snake head){
+        if (frut && fruta.intersects(head)) {
             fruta.clear(graphicsContext);
+            fondo.clear(graphicsContext);
+            fondo.render(graphicsContext);
             marcador.suma();
-            System.out.println("Has comido una fruta "+activo);
+            frut=false;
             System.out.println(marcador.getPuntuacion());
-
-
-        } else if (bomba.intersects(head)) {
-            activo = 1;
-            bomba.clear(graphicsContext);
-            marcador.resta();
-            System.out.println("Has comido una bomba "+activo);
-            System.out.println(marcador.getPuntuacion());
-
         }
 
+    }
+    private void comprobarBomba(Snake head) {
+        if (bomb && bomba.intersects(head)) {
+            bomba.clear(graphicsContext);
+            fondo.clear(graphicsContext);
+            fondo.render(graphicsContext);
+            marcador.resta();
+            bomb=false;
+            System.out.println(marcador.getPuntuacion());
+        }
+    }
+    public void renderitem(){
+        if (bomb){
+            bomba.clear(graphicsContext);
+            bomba.render(graphicsContext);
+        }else if (frut){
+            fruta.clear(graphicsContext);
+            fruta.render(graphicsContext);
+        }
     }
     private void prepareActionHandlers(String dir) {
 

@@ -4,7 +4,7 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
-public class Item {
+public class Fruta {
     String nombre;
     private Image image;
     private int positionX;
@@ -12,11 +12,11 @@ public class Item {
     private double width;
     private double height;
 
-    public Item(String nombre){
+    public Fruta(String nombre){
         this.nombre=nombre;
     }
 
-    public Item(int positionx, int positionY){
+    public Fruta(int positionx, int positionY){
         this.positionX=positionx;
         this.positionY=positionY;
     }

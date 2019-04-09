@@ -1,4 +1,4 @@
-package sample.Images;
+package sample;
 
 public class Marcador {
 
