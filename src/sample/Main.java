@@ -57,16 +57,16 @@ public class Main extends Application {
         Canvas canvas = new Canvas(alto,ancho);
         root.getChildren().add(canvas);
 
-        //String s =getClass().getClassLoader().getResource("sample\\Sounds\\music.mp3").toString();
-        //System.out.println(s);
-        String path = "file:///sample/music2.mp3";
-        //.toPath().toString() C:/Users/EMILI/IdeaProjects/Snake/src/
-        System.out.println(path);
-        media = new Media(path);
-        player = new MediaPlayer(media);
-        player.setAutoPlay(true);
-        player.setCycleCount(MediaPlayer.INDEFINITE);
-        player.play();
+//        String s =getClass().getClassLoader().getResource("sample\\Sounds\\music.mp3").toString();
+//        System.out.println(s);
+//        String path = "sample\\music2.mp3";
+//        .toPath().toString() file:\\\\\\C:\\Users\\EMILI\\IdeaProjects\\Snake\\src\\
+//        System.out.println(path);
+//        media = new Media(new File(path).toURI().toString());
+//        player = new MediaPlayer(media);
+//        player.setAutoPlay(true);
+//        player.setCycleCount(MediaPlayer.INDEFINITE);
+//        player.play();
 
         fondo.setImage();
         fondo.setPosition(0,0);
