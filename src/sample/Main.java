@@ -8,21 +8,29 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import sample.Sprites.Bomba;
 import sample.Sprites.Fondo;
 import sample.Sprites.Fruta;
 import sample.Sprites.Snake;
 
+import java.io.File;
 import java.util.Random;
 
 public class Main extends Application {
 
     static Scene mainScene;
     static GraphicsContext graphicsContext;
-    static int alto = 300;
-    static int ancho = 300;
+    static int alto = 600;
+    static int ancho = 600;
 
+    String puntos = "Puntuación: ";
+    String nivelAct = "Nivel: ";
     String direccion ="LEFT";
     Random random= new Random();
     boolean frut = true, bomb= false;
@@ -33,6 +41,10 @@ public class Main extends Application {
     Bomba bomba = new Bomba("bomba");
     Fondo fondo = new Fondo();
     Marcador marcador= new Marcador();
+
+    Media media;
+    MediaPlayer player;
+
 
     @Override
     public void start(Stage stage) {
@@ -45,6 +57,17 @@ public class Main extends Application {
         Canvas canvas = new Canvas(alto,ancho);
         root.getChildren().add(canvas);
 
+        //String s =getClass().getClassLoader().getResource("sample\\Sounds\\music.mp3").toString();
+        //System.out.println(s);
+        String path = "file:///sample/music2.mp3";
+        //.toPath().toString() C:/Users/EMILI/IdeaProjects/Snake/src/
+        System.out.println(path);
+        media = new Media(path);
+        player = new MediaPlayer(media);
+        player.setAutoPlay(true);
+        player.setCycleCount(MediaPlayer.INDEFINITE);
+        player.play();
+
         fondo.setImage();
         fondo.setPosition(0,0);
 
@@ -56,6 +79,11 @@ public class Main extends Application {
 
 
         graphicsContext= canvas.getGraphicsContext2D();
+
+        Font font = Font.font( "Helvetica", 15 );
+        graphicsContext.setFont( font );
+        graphicsContext.setStroke( Color.WHITE );
+        graphicsContext.setLineWidth(1);
 
         fondo.render(graphicsContext);
         head.render(graphicsContext);
@@ -70,70 +98,58 @@ public class Main extends Application {
 
         new AnimationTimer(){
             long lastUpdate = 0;
-//            long bombaRender =0;
-//            long bombaClear = 0;
-//            long nowBombarender=0;
-//            long nowBombaClear =0;
+
             @Override
             public void handle(long now) {
-//                nowBombaClear=now;
-//                bombaClear=now;
                 if (now - lastUpdate >= 10_000_000) {
 
                     if (!frut) {
                         pintarFruta();
                     }
-//                    if (!bomb && nowBombarender - bombaRender >= 60_000_000){
-//                        pintarbomba();
-//                        bombaRender = now;
-//                    }
-//                    if (bomb && nowBombaClear - bombaClear >=50_000_000){
-//                        bomba.clear(graphicsContext);
-//                        bombaClear = now;
-//                        bomb=false;
-//
-//                    }
                     fondo.clear(graphicsContext);
                     fondo.render(graphicsContext);
                     head.clear(graphicsContext);
                     head.update(direccion);
-                    if (head.getPositionX() < 0 || (head.getPositionX() + head.getWidth()) > ancho || head.getPositionY() < 0 || (head.getPositionY() + head.getHeight()) > alto - 10) {
-                        System.out.println("Has perdido");
-                        System.exit(0);
-                    }
+                    perder();
                     head.render(graphicsContext);
                     comprobarFruta(head);
-                    comprobarBomba(head);
                     renderitem();
-
                     lastUpdate = now;
-
                     if (marcador.getPuntuacion() == nivel){
                         head.setVelocity(head.getVelocity()+0.25);
                         System.out.println("velocidad aumentada");
                         nivel+=5;
+                        marcador.setNivel(marcador.getNivel()+1);
                     }
+                    String puntos = "Puntuación: "+marcador.getPuntuacion();
+                    String nivelAct = "Nivel: "+marcador.getNivel();
+
+                    graphicsContext.fillText(puntos,10,10);
+                    graphicsContext.strokeText(puntos,10,20);
+
+                    graphicsContext.fillText(nivelAct,530,10);
+                    graphicsContext.strokeText(nivelAct,530,20);
+
                 }
             }
         }.start();
         stage.show();
     }
 
-
-
-    private void pintarbomba() {
-        bomba.setPosition(random.nextInt( (int) ( ancho - bomba.getWidth() ) ), random.nextInt( (int) ( alto - bomba.getHeight() ) ) );
-        bomba.render(graphicsContext);
-        bomb=true;
+    private void perder() {
+        if (head.getPositionX() <= 0 || (head.getPositionX() + head.getWidth()) > ancho || head.getPositionY() <= 40 || (head.getPositionY() + head.getHeight()) > alto - 10) {
+            System.out.println("Has perdido");
+            System.exit(0);
+            player.stop();
+        }
     }
-
-    public void pintarFruta(){
+    private void pintarFruta(){
             fruta.setPosition(random.nextInt( (int) ( ancho - fruta.getWidth() ) ), random.nextInt( (int) ( alto - fruta.getHeight() ) ) );
             fruta.render(graphicsContext);
             frut=true;
 
     }
-    public void comprobarFruta(Snake head){
+    private void comprobarFruta(Snake head){
         if (frut && fruta.intersects(head)) {
             fruta.clear(graphicsContext);
             fondo.clear(graphicsContext);
@@ -143,6 +159,15 @@ public class Main extends Application {
             System.out.println(marcador.getPuntuacion());
         }
 
+    }
+    private void renderitem(){
+        if (bomb){
+            bomba.clear(graphicsContext);
+            bomba.render(graphicsContext);
+        }else if (frut){
+            fruta.clear(graphicsContext);
+            fruta.render(graphicsContext);
+        }
     }
     private void comprobarBomba(Snake head) {
         if (bomb && bomba.intersects(head)) {
@@ -154,15 +179,12 @@ public class Main extends Application {
             System.out.println(marcador.getPuntuacion());
         }
     }
-    public void renderitem(){
-        if (bomb){
-            bomba.clear(graphicsContext);
-            bomba.render(graphicsContext);
-        }else if (frut){
-            fruta.clear(graphicsContext);
-            fruta.render(graphicsContext);
-        }
+    private void pintarbomba() {
+        bomba.setPosition(random.nextInt( (int) ( ancho - bomba.getWidth() ) ), random.nextInt( (int) ( alto - bomba.getHeight() ) ) );
+        bomba.render(graphicsContext);
+        bomb=true;
     }
+
     private void prepareActionHandlers(String dir) {
 
         mainScene.setOnKeyPressed(
